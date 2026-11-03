@@ -1,88 +1,104 @@
-# Quantum Files — Caso 01: El experimento fantasma
+# Quantum Files — The Phantom Experiment
 
-**Quantum Files** es un juego de investigación educativo para navegador y móvil, preparado para la categoría EdTech del IBM Quantum Hackathon 2026 por el equipo **Qubit a la Brasa**. En Qori Lab, Detective Cuy investiga una alteración del circuito: Sami añade una segunda H a las 21:14; Rumi retira después un módulo a las 21:19. La memoria de auditoría vincula la edición con Sami; el experimento reconstruye su efecto. Rumi no inicia el sabotaje. El archivo PHI, con firma Φ, anuncia el siguiente episodio.
+**Investigate a mystery. Experiment with quantum circuits. Follow the evidence.**
 
-**Estado técnico:** la PWA y su API Python/Qiskit están implementadas en la rama principal. Este README describe esa aplicación web; no describe como producto actual el prototipo Streamlit anterior.
+Quantum Files is a Spanish-language educational detective game that brings introductory quantum computing into an interactive story. Created by **Qubit a la Brasa** for IBM Quantum | Qiskit Fall Fest 2026, it invites players to explore a fictional lab and reason about measurements through play.
 
-## Qué aprende quien juega
+[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Qiskit](https://img.shields.io/badge/Qiskit-2.1%2B-6929C4)](https://www.ibm.com/quantum/qiskit)
 
-El episodio busca que el jugador pueda:
+**[Play the live demo](https://quantum-files.vercel.app/)** · **[Portfolio fork](https://github.com/LE0ST/quantum-files)** · **[Original repository](https://github.com/LuisTE1/ibmquantumhackathon)** · **[Documentation index](docs/README.md)**
 
-- distinguir la probabilidad teórica de una frecuencia observada;
-- relacionar la preparación de un qubit con las probabilidades de sus mediciones;
-- interpretar H y X y seguir el efecto de dos H seguidas sin medición intermedia;
-- justificar una conclusión con la reconstrucción del circuito y la memoria de auditoría, no con una declaración estadística incorrecta.
+![The Spanish-language opening screen of Quantum Files, introducing the mystery at Qori Lab](docs/assets/start-screen.png)
 
-El público objetivo propuesto es de 14 años en adelante. Esa edad es una decisión de diseño por validar, no un mínimo validado con participantes.
+## Overview
 
-## Qué contiene la PWA
+At Qori Lab, an unexpected change to an experiment sets Detective Cuy on an investigation. Players explore rooms, talk to characters, collect evidence and reconstruct circuits to understand what happened. The experience runs in the browser as a progressive web app (PWA), with keyboard and touch controls.
 
-- Recorrido narrativo por Qori Lab con diálogos, objetivos y libreta de evidencias.
-- Actividades de predicción y experimentación con circuitos de un qubit y puertas H y X.
-- Conteos de mediciones, barras de resultados y una etiqueta que identifica Qiskit en servidor o el simulador local.
-- Desafíos repetibles, pistas, puntos, rachas e insignias.
-- Cuestionario opcional de tres preguntas antes y tres después, implementado directamente en `web/public/js/game.js`.
-- Interfaz adaptable con teclado y controles táctiles, manifest y service worker.
-- Guardado local del progreso con localStorage.
+## The Educational Challenge
 
-La PWA contiene sus propios diálogos, desafíos y preguntas en JavaScript. No carga el guion desde `cases/caso1_v2.json` ni el cuestionario desde `cases/quiz.json`.
+Quantum concepts can feel abstract when probabilities and circuit diagrams are presented without context. The game uses a mystery to give players a reason to predict, experiment and interpret evidence. Its intended learning goals include distinguishing theoretical probability from observed frequency and explaining the effect of basic gates. These are design goals, not measured learning outcomes; external educational validation remains pending.
 
-## Demo pública
+## Key Features
 
-[https://quantum-files.vercel.app/](https://quantum-files.vercel.app/)
+- A story-driven investigation with dialogue, objectives and an evidence notebook.
+- Interactive one-qubit challenges involving H and X gates, predictions and measurements.
+- Result counts and visualizations labeled with their simulation source.
+- Repeatable challenges, hints, points, streaks and badges, plus an optional pre/post quiz.
+- Keyboard and touch controls, local progress storage, and PWA support.
 
-El 24 de octubre de 2026 se comprobó por HTTP que la página, CSS, JavaScript, service worker y manifest responden. `index.html`, `game.js`, `sim.js`, `styles.css` y `sw.js` publicados coinciden con los assets del `origin/main` actual; el manifest presenta el nombre esperado del proyecto. GET `/api/run` devolvió `source: qiskit`, versión 2.6.1, y POST H–H con 20 shots devolvió probabilidades 1/0 y conteos 20/0. Es un smoke test de recursos y API, no una prueba de navegación completa ni una comprobación de metadatos internos del build de Vercel.
+## Gameplay and Quantum Concepts
 
-## Arquitectura y simulación
+Players encounter a qubit initially prepared in `|0⟩`, apply gates and compare predictions with sampled measurements. An H gate creates equal probabilities of measuring 0 or 1; two consecutive H gates without an intervening measurement return `|0⟩` to `|0⟩`. X swaps `|0⟩` and `|1⟩`. A small sample can differ from the theoretical probabilities, so measurement counts alone do not establish what happened in the story.
 
-La interfaz está en `web/public/`. El endpoint `POST /api/run` recibe puertas, número de shots y semilla; `web/api/_qrun.py` calcula las probabilidades ideales con `Statevector` y muestrea los conteos con `StatevectorSampler`, sobre un computador clásico. No se envían trabajos a una QPU ni se usa una cuenta de IBM Quantum.
+## Tech Stack
 
-Si la API falla o no hay conexión, `web/public/js/sim.js` aplica una simulación clásica local de amplitudes y muestrea resultados con su propio generador seudoaleatorio. La interfaz marca ese resultado como “Simulador local”. Es un respaldo en JavaScript, no una ejecución Qiskit. En ambos modos se simula un qubit ideal, sin ruido ni efectos físicos del módulo retirado. Véase [Arquitectura](docs/ARQUITECTURA.md) y [Limitaciones](docs/LIMITACIONES.md).
+| Layer | Technology |
+| --- | --- |
+| Interface | HTML, CSS and vanilla JavaScript; PWA manifest and service worker |
+| Simulation API | Python 3.12+, Qiskit `Statevector` and `StatevectorSampler` |
+| Browser fallback | Independent JavaScript one-qubit simulator |
+| Storage and hosting | Browser `localStorage`; Vercel static hosting and Python function |
+| Tests | pytest; Node.js for the JavaScript comparison |
 
-## Ejecutar en local
+## System Architecture
 
-Se requiere Python 3.12 o posterior y Qiskit, según `web/pyproject.toml`.
+```mermaid
+flowchart LR
+    Player --> UI[Browser PWA]
+    UI -->|gates, shots, seed| API[Python API]
+    API --> Q[Qiskit statevector simulation on CPU]
+    UI -. API unavailable .-> JS[JavaScript simulator in browser]
+    UI --> Storage[localStorage]
+```
 
-Para servir el juego y probar también la API Qiskit:
+The API calculates ideal probabilities and samples counts using Qiskit on a classical computer. If the API is unavailable, the browser uses a separate JavaScript simulator and labels the source. Neither path uses quantum hardware. The current episode does not train a quantum machine learning model. See [architecture](docs/ARQUITECTURA.md) and [limitations](docs/LIMITACIONES.md).
 
-~~~powershell
+## Getting Started
+
+From the repository root, with Python 3.12 or later:
+
+```bash
 python -m pip install -r web/requirements.txt
 python web/serve_local.py
-~~~
+```
 
-Abrir `http://localhost:8765`. El servidor local importa Qiskit y ofrece la API en el mismo origen.
+Open <http://localhost:8765>. This serves the interface and the local Qiskit API. To explore only the static interface with the JavaScript fallback:
 
-Para revisar solo la interfaz estática, sin API Qiskit:
-
-~~~powershell
+```bash
 python -m http.server 8765 --directory web/public
-~~~
+```
 
-Abrir `http://localhost:8765`. Las solicitudes a la API no estarán disponibles; el juego debe recurrir al simulador local JavaScript.
+The PWA lives in `web/`. The Streamlit application in `app.py` and `engine/`, along with the case JSON files, are legacy or reference materials; the PWA keeps its narrative and quiz in JavaScript. The [documentation index](docs/README.md) separates current documents from historical records.
 
-Ejecutar las pruebas del núcleo web desde la raíz:
+## Testing and Current Limitations
 
-~~~powershell
+To run the web simulation tests from the repository root:
+
+```bash
+python -m pip install -r web/requirements.txt
 python -m pip install pytest
 python -m pytest -q tests/test_web.py
-~~~
+```
 
-Las pruebas comparan probabilidades de Qiskit y JavaScript para las 31 secuencias de cero a cuatro compuertas H/X, además de revisar probabilidades conocidas, conteos repetibles, entradas inválidas y el handler HTTP. Node.js permite ejecutar la comparación JS; la prueba se omite si Node no está instalado. Las pruebas de navegador y sus requisitos están descritos en [tests/e2e/README.md](tests/e2e/README.md). Para el resultado real de esta revisión y las pruebas pendientes, consultar [Validación](docs/VALIDACION.md) y [Estado de integración](docs/ESTADO-INTEGRACION.md).
+Node.js is needed for the test comparing the JavaScript simulator with Qiskit; that comparison is skipped if Node is unavailable. Browser tests have additional requirements described in [tests/e2e/README.md](tests/e2e/README.md). See [validation](docs/VALIDACION.md) for the historical test record; test results depend on the environment and must be verified for each run.
 
-## Fuentes, créditos y documentos
+The simulation models an ideal single qubit and does not model noise or physical hardware. The four team members tested the prototype internally, but no quantitative learning results were recorded, and external evaluation is pending. Accessibility and browser compatibility have not been formally audited. Quiz forms are not equivalent measures, and progress is stored locally on the device. More detail is available in [limitations](docs/LIMITACIONES.md).
 
-La aplicación usa HTML, CSS y JavaScript del navegador, Python, Qiskit y Vercel. Parte del arte del Detective Cuy, Sami/la llama y el fondo andino se reutilizó del proyecto anterior del equipo, “Juego_HTA” / Hack the Andes. El equipo declara asistencia de Claude Code en la implementación y de OpenAI Codex en revisión y documentación; el equipo conserva responsabilidad por las decisiones y el contenido. La lista de referencias y alcance está en [Fuentes](docs/FUENTES.md).
+## Team and My Contributions
 
-- [Índice de documentación vigente e histórica](docs/README.md)
-- [Pedagogía](docs/PEDAGOGIA.md)
-- [Protocolo de validación](docs/VALIDACION.md)
-- [Guion de pitch](docs/GUION-PITCH.md)
-- [Lista de entrega](docs/ENTREGA.md)
-- [Estado de integración y fuentes de verdad](docs/ESTADO-INTEGRACION.md)
-- [Migración narrativa y referencia JSON v2](docs/MIGRACION-NARRATIVA.md)
+**Qubit a la Brasa** built this project collaboratively:
 
-## Pruebas internas y alcance del proyecto
+- Maricielo Rubi Antúnez de Mayolo Seminario
+- Luis Giovani de la Cruz Hoyos
+- Leonardo Sait Yactayo Tolentino
+- Luis Hernando Tataje Espinoza
 
-Los cuatro integrantes probaron manualmente el videojuego. Estas pruebas internas confirman que el equipo interactuó con el prototipo, pero no contamos con métricas registradas de duración, puntuaciones pretest/postest ni resultados cuantitativos. No equivalen a una evaluación externa ni demuestran eficacia pedagógica. La validación con participantes externos sigue pendiente; las preguntas iniciales y finales tampoco son formas equivalentes y la duración no se registra automáticamente.
+**Leonardo Sait Yactayo Tolentino's contribution** focused on educational content, pedagogical design, interactive storytelling and technical documentation. The project reflects the collective work of all four members.
 
-La simulación Qiskit ocurre en CPU y no demuestra ventaja cuántica; el respaldo JavaScript es otro simulador. El episodio no entrena un modelo QML. El progreso se guarda localmente, sin cuentas ni analítica centralizada. La compatibilidad y accesibilidad aún no cuentan con auditoría formal. El detalle está en [Limitaciones](docs/LIMITACIONES.md) y [Validación](docs/VALIDACION.md).
+## Acknowledgments and References
+
+Detective Cuy, the llama and the Andean background reuse artwork from the team's earlier *Juego_HTA* / Hack the Andes project; ownership and licenses for reused assets should be confirmed before distribution beyond the hackathon. The team reports using Claude Code during implementation and OpenAI Codex for review and documentation, with the team responsible for decisions and content. No software license is added by this portfolio edition.
+
+- [Sources, dependencies and credits](docs/FUENTES.md)
+- [Pedagogical design](docs/PEDAGOGIA.md) · [Validation protocol](docs/VALIDACION.md) · [Integration status](docs/ESTADO-INTEGRACION.md)
+- [Qiskit Statevector](https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.quantum_info.Statevector) · [StatevectorSampler](https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.primitives.StatevectorSampler)
